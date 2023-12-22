@@ -1,27 +1,19 @@
 package com.example.studentproblembook;
-
-import com.example.studentproblembook.User;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
 import java.time.LocalDate;
-import java.util.Date;
-import java.util.Iterator;
-
+import java.util.Optional;
 
 public class TaskPlannerApp extends Application {
 
     private TaskPlanner taskPlanner;
     private ListView<Task> taskListView;
-
     public static void main(String[] args) {
 
         launch(args);
@@ -43,8 +35,7 @@ public class TaskPlannerApp extends Application {
         Button completeTaskButton = new Button("Отметить задачу как законченную");
         completeTaskButton.setOnAction(e -> showCompleteTaskDialog());
 
-        Button showTasksButton = new Button("Показать список задач");
-        showTasksButton.setOnAction(e -> showTaskList());
+
 
         // Создаем ListView для отображения задач
         taskListView = new ListView<>();
@@ -52,9 +43,9 @@ public class TaskPlannerApp extends Application {
 
         VBox layout = new VBox(10);
         layout.setPadding(new Insets(10));
-        layout.getChildren().addAll(addTaskButton, removeTaskButton, completeTaskButton, showTasksButton, taskListView);
+        layout.getChildren().addAll(addTaskButton, removeTaskButton, completeTaskButton, taskListView);
 
-        Scene scene = new Scene(layout, 400, 300);
+        Scene scene = new Scene(layout, 600, 300);
         primaryStage.setScene(scene);
         primaryStage.show();
         taskListView.refresh();
@@ -63,32 +54,32 @@ public class TaskPlannerApp extends Application {
     private void showAddTaskDialog(Stage primaryStage) {
         Stage dialogStage = new Stage();
         dialogStage.initModality(Modality.WINDOW_MODAL);
-        dialogStage.setTitle("Add Task");
+        dialogStage.setTitle("Добавить задачу");
 
         VBox vbox = new VBox(10);
         vbox.setPadding(new Insets(10));
 
-        Label descriptionLabel = new Label("Description:");
+        Label descriptionLabel = new Label("Описание:");
         TextField descriptionTextField = new TextField();
 
-        Label deadlineLabel = new Label("Deadline:");
+        Label deadlineLabel = new Label("Дедлайн:");
         DatePicker deadlineDatePicker = new DatePicker();
 
-        Label priorityLabel = new Label("Priority:");
+        Label priorityLabel = new Label("Приоритет:");
         ComboBox<Priority> priorityComboBox = new ComboBox<>();
         priorityComboBox.getItems().addAll(Priority.LOW, Priority.MEDIUM, Priority.HIGH);
         priorityComboBox.getSelectionModel().selectFirst();
 
-        Button addButton = new Button("Add Task");
+        Button addButton = new Button("Добавить задачу");
         addButton.setOnAction(e -> {
             String description = descriptionTextField.getText();
             LocalDate deadlineDate = deadlineDatePicker.getValue();
             Priority priority = priorityComboBox.getValue();
 
             if (!description.isEmpty() && deadlineDate != null && priority != null) {
-                System.out.println("Description: " + description);
-                System.out.println("Deadline: " + deadlineDate);
-                System.out.println("Priority: " + priority);
+                System.out.println("Описание: " + description);
+                System.out.println("Дедлайн: " + deadlineDate);
+                System.out.println("Приоритет: " + priority);
 
                 Task newTask = new Task(description, java.sql.Date.valueOf(deadlineDate), priority);
 
@@ -134,14 +125,32 @@ public class TaskPlannerApp extends Application {
 
 
     private void showCompleteTaskDialog() {
-        // Реализуйте диалог для отметки задачи как завершенной
-    }
-    private void showTaskList() {
-        System.out.println("Список задач:");
-        for (Task task : taskPlanner.get_tasks()) {
-            System.out.println(task);
+        Task selectedTask = getSelectedTask();
+        if (selectedTask != null) {
+            // Создаем диалоговое окно для подтверждения завершения задачи
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Complete Task");
+            alert.setHeaderText(null);
+            alert.setContentText("Вы уверены, что хотите отметить задачу как завершенную?");
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                // Изменяем статус задачи на завершенный
+                selectedTask.set_status(Status.COMPLETED);
+
+                // Обновляем интерфейс
+                taskListView.refresh();
+            }
+        } else {
+            // Выведите сообщение об ошибке, если задача не выбрана
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Warning");
+            alert.setHeaderText(null);
+            alert.setContentText("Выберите задачу для завершения.");
+            alert.showAndWait();
         }
-        System.out.println("-----");
     }
+
+
 
 }
