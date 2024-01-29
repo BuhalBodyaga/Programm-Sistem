@@ -72,26 +72,38 @@ public class TaskPlannerApp extends Application {
 
         Button addButton = new Button("Добавить задачу");
         addButton.setOnAction(e -> {
-            String description = descriptionTextField.getText();
-            LocalDate deadlineDate = deadlineDatePicker.getValue();
-            Priority priority = priorityComboBox.getValue();
+            try {
+                String description = descriptionTextField.getText().trim();
+                LocalDate deadlineDate = deadlineDatePicker.getValue();
+                Priority priority = priorityComboBox.getValue();
 
-            if (!description.isEmpty() && deadlineDate != null && priority != null) {
-                System.out.println("Описание: " + description);
-                System.out.println("Дедлайн: " + deadlineDate);
-                System.out.println("Приоритет: " + priority);
+                // Регулярное выражение для проверки, что описание состоит только из букв, цифр и русских букв
+                String descriptionRegex = "^[a-zA-Zа-яА-Я0-9]+$";
 
-                Task newTask = new Task(description, java.sql.Date.valueOf(deadlineDate), priority);
+                if (description.matches(descriptionRegex) && deadlineDate != null && priority != null) {
+                    System.out.println("Описание: " + description);
+                    System.out.println("Дедлайн: " + deadlineDate);
+                    System.out.println("Приоритет: " + priority);
+
+                    Task newTask = new Task(description, java.sql.Date.valueOf(deadlineDate), priority);
 
 
-                // Обновляем задачи в ListView
-                taskListView.getItems().addAll(newTask);
 
-                dialogStage.close();
-            } else {
-                System.out.println("Ошибка: Некорректные данные для создания задачи");
+                    // Обновляем задачи в ListView
+                    taskListView.getItems().addAll(newTask);
+
+                    dialogStage.close();
+                } else {
+                    // Вывод сообщения об ошибке в случае некорректных данных
+                    showErrorDialog("Ошибка: Некорректные данные для создания задачи");
+                }
+            } catch (Exception ex) {
+                // Вывод стека вызова в случае возникновения исключения
+                ex.printStackTrace();
+                showErrorDialog("Произошла ошибка при создании задачи");
             }
         });
+
 
         vbox.getChildren().addAll(descriptionLabel, descriptionTextField, deadlineLabel,
                 deadlineDatePicker, priorityLabel, priorityComboBox, addButton);
@@ -103,6 +115,13 @@ public class TaskPlannerApp extends Application {
         dialogStage.showAndWait();
     }
 
+    private void showErrorDialog(String errorMessage) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Ошибка");
+        alert.setHeaderText(null);
+        alert.setContentText(errorMessage);
+        alert.showAndWait();
+    }
     private Task getSelectedTask() {
         return taskListView.getSelectionModel().getSelectedItem();
     }
